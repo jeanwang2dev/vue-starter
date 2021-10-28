@@ -34,13 +34,30 @@ export default {
     toggleAddTask(){
       this.showAddTaskForm = !this.showAddTaskForm
     },
-    addTask(newtask) {
-      this.tasks = [...this.tasks, newtask]
+    async addTask(newtask) {
+      const res = await fetch('api/tasks', {
+        method: 'Post',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        body: JSON.stringify(newtask)
+      })
+
+      const data = await res.json()
+
+      this.tasks = [...this.tasks, data]
     },
-    deleteTask(id){
+    async deleteTask(id){
       //console.log('task', id);
       if( confirm('Are you sure to delete this task?')){
-        this.tasks = this.tasks.filter( (task)=> task.id !== id )
+        const res = await fetch( `api/tasks/${id}`, {
+          method: 'DELETE'
+        })
+
+        res.status === 200 
+         ? ( this.tasks = this.tasks.filter( 
+           (task)=> task.id !== id ) ) 
+           : alert('Error in deleting task')
       }
     },
     toggleReminder(id){
@@ -49,28 +66,23 @@ export default {
         task.id === id ? {...task, reminder: !task.reminder} : task
       );
     },
+    async fetchTasks() {
+      const res = await fetch('api/tasks')
+
+      const data = await res.json()
+
+      return data
+    },
+    async fetchTask(id) {
+      const res = await fetch(`api/tasks/${id}`)
+
+      const data = await res.json()
+
+      return data
+    }
   },
-  created() {
-    this.tasks = [
-      {
-        id: 1,
-        text: 'Doctors Appointment',
-        day: 'March 1st at 2:30pm',
-        reminder: true,
-      },
-      {
-        id: 2,
-        text: 'Meeting at School',
-        day: 'May 20th at 9:30am',
-        reminder: false,
-      },
-      {
-        id: 3,
-        text: 'Grocery Shopping',
-        day: 'April 1st at 12:30pm',
-        reminder: true,
-      }
-    ]
+  async created() {
+    this.tasks = await this.fetchTasks() 
   }
 
 }
